@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #title           : lico.sh
 #description     : This is the official machine update script for the New Linux Counter Project (linuxcounter.net)
+#license         : GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 #author		     : Alexander Löhner <alex.loehner@linux.com>
 #date            : 20150415
 #version         : 0.0.1-prealpha
@@ -545,16 +546,6 @@ urlEncode(){
 }
 
 if [ ${showhelp} -eq 1 ]; then
-  echo "#=============================================================================="
-  echo "#title        : lico.sh"
-  echo "#description  : This is the official machine update script for the New Linux Counter Project (linuxcounter.net)"
-  echo "#author		  : Alexander Löhner <alex.loehner@linux.com>"
-  echo "#date         : 20150415"
-  echo "#version      : ${lico_script_version}"
-  echo "#usage		  : sh lico.sh"
-  echo "#notes        : grep, egrep, sed, awk, which and some more standard tools are needed to run this script"
-  echo "#bash_version : GNU bash, Version 4.3.11(1)-release (x86_64-pc-linux-gnu)"
-  echo "#=============================================================================="
   echo ""
   echo " Usage:  ${SCRIPTNAME} [--allow-root] [-i|-s|-m|-ci|-cu|-h|-v|-update]"
   echo ""
@@ -595,17 +586,6 @@ if [ ${showhelp} -eq 1 ]; then
   echo ""
 fi
 if [ ${showversion} -eq 1 ]; then
-  echo ""
-  echo "#=============================================================================="
-  echo "#title        : lico.sh"
-  echo "#description  : This is the official machine update script for the New Linux Counter Project (linuxcounter.net)"
-  echo "#author		  : Alexander Löhner <alex.loehner@linux.com>"
-  echo "#date         : 20150415"
-  echo "#version      : ${lico_script_version}"
-  echo "#usage		  : sh lico.sh"
-  echo "#notes        : grep, egrep, sed, awk, which and some more standard tools are needed to run this script"
-  echo "#bash_version : GNU bash, Version 4.3.11(1)-release (x86_64-pc-linux-gnu)"
-  echo "#=============================================================================="
   echo ""
   echo " ${lico_script_version}"
   echo ""

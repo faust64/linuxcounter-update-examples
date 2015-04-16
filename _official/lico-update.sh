@@ -776,6 +776,18 @@ fi
 if [ ${doupdate} -eq 1 ]; then
     updateScript
 fi
+if [ ${showdata} -eq 1 ]; then
+    echo "> Showing the current configuration and exiting..."
+    echo ""
+    echo "### config start"
+    cat ${CONFFILE}
+    echo "### config end"
+    echo ""
+    exit 0
+fi
+if [ ${senddata} -eq 1 ]; then
+    sendDataToApi
+fi
 
 if [ ${interactive} -eq 1 ]; then
     echo "> Entering interactive mode..."

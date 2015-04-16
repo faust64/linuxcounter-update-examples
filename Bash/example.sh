@@ -6,9 +6,11 @@ APIURL="http://api.linuxcounter.net/v1/"
 
 ###################################################################
 
-function parse_json()
-{
-    echo $1 | \
+parse_json(){
+    echo "$1" | \
+    sed "s/:\([0-9]\)/:\"\1/g" | \
+    sed "s/\([0-9]\),\"/\1\",\"/g" | \
+    sed "s/\([0-9]\)\}/\1\"}/g" | \
     sed -e 's/[{}]/''/g' | \
     sed -e 's/", "/'\",\"'/g' | \
     sed -e 's/" ,"/'\",\"'/g' | \
@@ -31,7 +33,6 @@ fi
 
 echo "> Sending request for creating new machine..."
 response=$( curl -s --request POST "${APIURL}machines" --header "x-lico-apikey: ${APIKEY}" )
-response=$( echo "$response" | sed "s/:\([0-9]\)/:\"\1/g" | sed "s/\([0-9]\),\"/\1\",\"/g" | sed "s/\([0-9]\)\}/\1\"}/g"  )
 
 machine_id=$( parse_json "${response}" machine_id )
 machine_updatekey=$( parse_json "${response}" machine_updatekey )

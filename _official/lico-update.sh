@@ -699,8 +699,8 @@ installCronjob(){
         min=$((`${CAT} /dev/urandom | ${OD} -N1 -An -i` % 59))
         hour=$((`${CAT} /dev/urandom | ${OD} -N1 -An -i` % 23))
         dow=$((`${CAT} /dev/urandom | ${OD} -N1 -An -i` % 7))
-        echo "# added by ${scriptversion}" >> ${TMPDIR}/crontab.tmp
-        echo "${min} ${hour} * * ${dow} ${SCRIPT} -m" >> ${TMPDIR}/crontab.tmp
+        echo "# added by ${lico_script_name} ${lico_script_version}" >> ${TMPDIR}/crontab.tmp
+        echo "${min} ${hour} * * ${dow} ${SCRIPT} -m >/dev/null 2>&1" >> ${TMPDIR}/crontab.tmp
         ${CRONTAB} ${TMPDIR}/crontab.tmp
         rm ${TMPDIR}/crontab.tmp
         echo "> The cronjob got successfully activated!"
@@ -715,7 +715,7 @@ uninstallCronjob(){
         echo "! The cronjob is not active!"
         exit 1
     else
-        ${SED} -e "/${SCRIPTJOB}/d" -e "/${scriptversion}/d" -i ${TMPDIR}/crontab.tmp
+        ${SED} -e "/${SCRIPTJOB}/d" -e "/${lico_script_version}/d" -i ${TMPDIR}/crontab.tmp
         ${CRONTAB} ${TMPDIR}/crontab.tmp
         status=$?
         rm ${TMPDIR}/crontab.tmp

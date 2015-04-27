@@ -4,13 +4,13 @@
 #license         : GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 #author		     : Alexander Löhner <alex.loehner@linux.com>
 #date            : 20150415
-#version         : 0.0.1
+#version         : 0.0.2
 #usage		     : sh lico-update.sh
 #notes           : grep, egrep, sed, awk, which and some more standard tools are needed to run this script
 #bash_version    : GNU bash, Version 4.3.11(1)-release (x86_64-pc-linux-gnu)
 #==============================================================================
 
-lico_script_version="0.0.1"
+lico_script_version="0.0.2"
 lico_script_name="lico-update.sh"
 
 apiurl="http://api.linuxcounter.net/v1"
@@ -19,6 +19,10 @@ apiurl="http://api.linuxcounter.net/v1"
 
 export LANG=C
 export PATH="${HOME}/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+
+MYPATH=$(cd `dirname "${0}"` && pwd)/`basename "${0}"`
+
+isBusyBox=$( [ $( find --help 2>&1 3>&1 4>&1 | head -n 1 | cut -d " " -f 1 ) = "BusyBox" ] && echo true || echo false )
 
 if [ -x /bin/egrep ]; then
   EGREP="/bin/egrep"
@@ -224,9 +228,17 @@ else
 fi
 
 releasefile=""
-releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*-release" | ${GREP} -v lsb | ${GREP} -i -v strato )
+if [ "${isBusyBox}" = "true" ]; then
+    releasefile=$( ${FIND} /etc -type f -iname "*-release" 2>/dev/null | ${HEAD} -n 1 | ${GREP} -v lsb | ${GREP} -i -v strato )
+else
+    releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*-release" | ${GREP} -v lsb | ${GREP} -i -v strato )
+fi
 if [ "${releasefile}" = "" ]; then
-  releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*version" )
+    if [ "${isBusyBox}" = "true" ]; then
+        releasefile=$( ${FIND} /etc -type f -iname "*version" 2>/dev/null | ${HEAD} -n 1 | ${GREP} -v lsb | ${GREP} -i -v strato )
+    else
+        releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*version" )
+    fi
 fi
 
 if [ "${UNAME}" = "" ]; then
@@ -333,49 +345,54 @@ getDistribution(){
         release=""
         if [ "${releasefile}" = "" ]; then
           if [ -d "/var/smoothwall" ]; then
-            release="Smoothwall Linux"
+            distribution="Smoothwall Linux"
           elif [ -n "$( getBin sorcery 2>/dev/null | ${GREP} -v ' ' )" -a -n "$( getBin gaze 2>/dev/null | ${GREP} -v ' ' )" ]; then
-            release="Source Mage Linux"
+            distribution="Source Mage Linux"
           else
-            release=""
+            distribution=""
           fi
         else
           case "${releasefile}" in
             /etc/gentoo-release)
-              if [ -h /etc/make.profile ]; then
-                release="Gentoo `${LS} -l /etc/make.profile 2>/dev/null | ${SED} -e 's;^.*/\([^/]*/[^/]*\)$;\1;' | tr '/' ' '`"
-              else
-                release="Gentoo"
-              fi
+              distribution="Gentoo"
               ;;
             /var/ipcop/general-functions.pl)
-              release=`${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1`
+              distribution=`${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1`
               ;;
             /etc/debian_version)
-              release="Debian `${CAT} ${releasefile}`"
+              distribution="Debian GNU/Linux"
               ;;
             /etc/GoboLinuxVersion)
-              release="GoboLinux `${CAT} ${releasefile}`"
+              distribution="GoboLinux"
               ;;
             /etc/knoppix-version)
-              release="Knoppix `${CAT} ${releasefile}`"
+              distribution="Knoppix"
               ;;
             /etc/zenwalk-version)
-              release="Zenwalk `${CAT} ${releasefile}`"
+              distribution="Zenwalk"
+              ;;
+            /etc/os-release)
+              . /etc/os-release
+              distribution=${NAME}
               ;;
             *)
-              release=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
+              distribution=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
               ;;
           esac
         fi
-        if [ "${release}" = "" ]; then
+        if [ "${release}" = "" ] && [ "${distribution}" = "" ]; then
           distribution=""
-        else
+        elif [ "${distribution}" = "" ]; then
           distribution=$( echo ${release} | ${AWK} '{print $1}' )
         fi
       fi
     else
-      distribution=$(${LSB_RELEASE} -is)
+        if [ "${releasefile}" = "/etc/os-release" ]; then
+            . /etc/os-release
+            distribution=${NAME}
+        else
+            distribution=$(${LSB_RELEASE} -is)
+        fi
     fi
     echo ${distribution}
 }
@@ -387,51 +404,50 @@ getDistribVersion(){
         distribversion="${DISTRIB_RELEASE}"
       else
         release=""
-        if [ "${releasefile}" = "" ]; then
-          if [ -d "/var/smoothwall" ]; then
-            release="Smoothwall Linux"
-          elif [ -n "$( getBin sorcery 2>/dev/null | ${GREP} -v ' ' )" -a -n "$( getBin gaze 2>/dev/null | ${GREP} -v ' ' )" ]; then
-            release="Source Mage Linux"
-          else
-            release=""
-          fi
-        else
-          case "${releasefile}" in
-            /etc/gentoo-release)
-              if [ -h /etc/make.profile ]; then
-                release="Gentoo `${LS} -l /etc/make.profile 2>/dev/null | ${SED} -e 's;^.*/\([^/]*/[^/]*\)$;\1;' | tr '/' ' '`"
-              else
-                release="Gentoo"
-              fi
-              ;;
+        case "${releasefile}" in
+#            /etc/gentoo-release)
+#              if [ -h /etc/make.profile ]; then
+#                release=$( ${LS} -l /etc/make.profile 2>/dev/null | ${SED} -e 's;^.*/\([^/]*/[^/]*\)$;\1;' | tr '/' ' ' )
+#              else
+#                release=""
+#              fi
+#              ;;
             /var/ipcop/general-functions.pl)
-              release=`${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1`
+              release=$( ${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1 )
               ;;
             /etc/debian_version)
-              release="Debian `${CAT} ${releasefile}`"
+              release=$( ${CAT} ${releasefile} )
               ;;
             /etc/GoboLinuxVersion)
-              release="GoboLinux `${CAT} ${releasefile}`"
+              release=$( ${CAT} ${releasefile} )
               ;;
             /etc/knoppix-version)
-              release="Knoppix `${CAT} ${releasefile}`"
+              release=$( ${CAT} ${releasefile} )
               ;;
             /etc/zenwalk-version)
-              release="Zenwalk `${CAT} ${releasefile}`"
+              release=$( ${CAT} ${releasefile} )
+              ;;
+            /etc/os-release)
+              . /etc/os-release
+              release=${VERSION}
               ;;
             *)
               release=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
               ;;
-          esac
-        fi
+        esac
         if [ "${release}" = "" ]; then
           distribversion=""
         else
-          distribversion=$( echo ${release} | ${AWK} '{print $2}' )
+          distribversion=${release}
         fi
       fi
     else
-      distribversion=$(${LSB_RELEASE} -rs)
+        if [ "${releasefile}" = "/etc/os-release" ]; then
+            . /etc/os-release
+            distribversion=${VERSION}
+        else
+            distribversion=$(${LSB_RELEASE} -rs)
+        fi
     fi
     echo ${distribversion}
 }
@@ -554,7 +570,7 @@ getNumberOfLoggedInUsers(){
 
 getTotalDiskSpace() {
   if [ "${OS}" = "Linux" ]; then
-    olddf=$( [ -z "$( ${DF} --help | ${GREP} -- "-P" )" ] && echo "1" || echo "0" )
+    olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
     if [ "${olddf}" = "1" ]; then
       space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
     else
@@ -566,7 +582,7 @@ getTotalDiskSpace() {
 
 getFreeDiskSpace() {
   if [ "${OS}" = "Linux" ]; then
-    olddf=$( [ -z "$( ${DF} --help | ${GREP} -- "-P" )" ] && echo "1" || echo "0" )
+    olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
     if [ "${olddf}" = "1" ]; then
       space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
     else
@@ -728,9 +744,15 @@ uninstallCronjob(){
 }
 
 updateScript(){
-    ${WGET} https://github.com/alexloehner/linuxcounter-update-examples/raw/master/_official/lico-update.sh
-    sudo mv lico-update.sh /usr/local/bin/lico-update.sh
-    chmod +x /usr/local/bin/lico-update.sh
+    whoami=$( whoami )
+    ${WGET} -O /tmp/lico-update.sh https://github.com/alexloehner/linuxcounter-update-examples/raw/master/_official/lico-update.sh
+    if [ "${whoami}" = "root" ]; then
+        mv /tmp/lico-update.sh ${MYPATH}
+        chmod +x ${MYPATH}
+    else
+        sudo mv /tmp/lico-update.sh ${MYPATH}
+        chmod +x ${MYPATH}
+    fi
 }
 
 if [ ${showhelp} -eq 1 ]; then

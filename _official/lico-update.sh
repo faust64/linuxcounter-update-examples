@@ -2,15 +2,15 @@
 #title           : lico-update.sh
 #description     : This is the official machine update script for the New Linux Counter Project (linuxcounter.net)
 #license         : GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
-#author		     : Alexander Löhner <alex.loehner@linux.com>
+#author          : Alexander Löhner <alex.loehner@linux.com>
 #date            : 20150415
-#version         : 0.0.2
-#usage		     : sh lico-update.sh
+#version         : 0.0.3
+#usage           : sh lico-update.sh
 #notes           : grep, egrep, sed, awk, which and some more standard tools are needed to run this script
 #bash_version    : GNU bash, Version 4.3.11(1)-release (x86_64-pc-linux-gnu)
 #==============================================================================
 
-lico_script_version="0.0.2"
+lico_script_version="0.0.3"
 lico_script_name="lico-update.sh"
 
 apiurl="http://api.linuxcounter.net/v1"
@@ -25,91 +25,91 @@ MYPATH=$(cd `dirname "${0}"` && pwd)/`basename "${0}"`
 isBusyBox=$( [ $( find --help 2>&1 3>&1 4>&1 | head -n 1 | cut -d " " -f 1 ) = "BusyBox" ] && echo true || echo false )
 
 if [ -x /bin/egrep ]; then
-  EGREP="/bin/egrep"
+    EGREP="/bin/egrep"
 elif [ -x /usr/bin/egrep ]; then
-  EGREP="/usr/bin/egrep"
+    EGREP="/usr/bin/egrep"
 elif [ -x /usr/local/bin/egrep ]; then
-  EGREP="/usr/local/bin/egrep"
+    EGREP="/usr/local/bin/egrep"
 fi
 
 if [ -x /bin/grep ]; then
-  GREP="/bin/grep"
+    GREP="/bin/grep"
 elif [ -x /usr/bin/grep ]; then
-  GREP="/usr/bin/grep"
+    GREP="/usr/bin/grep"
 elif [ -x /usr/local/bin/grep ]; then
-  GREP="/usr/local/bin/grep"
+    GREP="/usr/local/bin/grep"
 fi
 
 if [ -x /bin/head ]; then
-  HEAD="/bin/head"
+    HEAD="/bin/head"
 elif [ -x /usr/bin/head ]; then
-  HEAD="/usr/bin/head"
+    HEAD="/usr/bin/head"
 elif [ -x /usr/local/bin/head ]; then
-  HEAD="/usr/local/bin/head"
+    HEAD="/usr/local/bin/head"
 fi
 
 if [ -x /bin/which ]; then
-  WHICH="/bin/which"
+    WHICH="/bin/which"
 elif [ -x /usr/bin/which ]; then
-  WHICH="/usr/bin/which"
+    WHICH="/usr/bin/which"
 elif [ -x /usr/local/bin/which ]; then
-  WHICH="/usr/local/bin/which"
+    WHICH="/usr/local/bin/which"
 fi
 
 # Bins
 WHICH=$( which which 2>/dev/null )
 if [ "${WHICH}" = "" ]; then
-  WHICH=$( type type 2>/dev/null | ${HEAD} -n 1 )
-  if [ "${WHICH}" = "" ]; then
-    WHICH=$( locate locate 2>/dev/null | ${EGREP} "bin/locate$" | ${HEAD} -n 1 )
+    WHICH=$( type type 2>/dev/null | ${HEAD} -n 1 )
     if [ "${WHICH}" = "" ]; then
-      WHICH=$( find /usr/ -name find 2>/dev/null | ${EGREP} "bin/find$" | ${HEAD} -n 1 )
-      if [ "${WHICH}" = "" ]; then
-        echo "> No tool to locate the needed binaries found! I can not continue here!"
-        exit 1
-      else
-        WHICH="${WHICH} / -name"
-        HOW="find"
-      fi
+        WHICH=$( locate locate 2>/dev/null | ${EGREP} "bin/locate$" | ${HEAD} -n 1 )
+        if [ "${WHICH}" = "" ]; then
+            WHICH=$( find /usr/ -name find 2>/dev/null | ${EGREP} "bin/find$" | ${HEAD} -n 1 )
+            if [ "${WHICH}" = "" ]; then
+                echo "> No tool to locate the needed binaries found! I can not continue here!"
+                exit 1
+            else
+                WHICH="${WHICH} / -name"
+                HOW="find"
+            fi
+        else
+            HOW="locate"
+        fi
     else
-      HOW="locate"
+        HOW="type"
     fi
-  else
-    HOW="type"
-  fi
 else
-  HOW="which"
+    HOW="which"
 fi
 
 getBin() {
-  binary="${1}"
-  case "${HOW}" in
-    "which")
-      echo $( ${WHICH} ${binary} 2>/dev/null )
-      ;;
-    "type")
-      # type is a shell builtin, so we don't have a path
-      echo $( type -p ${binary} 2>/dev/null )
-      ;;
-    "locate")
-      echo $( ${WHICH} ${binary} 2>/dev/null | ${EGREP} "bin/${binary}$" | ${GREP} -v proc | ${HEAD} -n 1 )
-      ;;
-    "find")
-      for d in ${SPTH}; do
-        f=$( ${WHICH} ${d} -name ${binary} | ${EGREP} "bin/${binary}$" | ${GREP} -v proc | ${HEAD} -n 1 )
-        [[ ! "${f}" = "" ]] && break
-      done
-      echo "${f}"
-      ;;
-    *)
-      echo $( ${WHICH} ${binary} 2>/dev/null )
-      ;;
-  esac
+    binary="${1}"
+    case "${HOW}" in
+        "which")
+            echo $( ${WHICH} ${binary} 2>/dev/null )
+            ;;
+        "type")
+            # type is a shell builtin, so we don't have a path
+            echo $( type -p ${binary} 2>/dev/null )
+            ;;
+        "locate")
+            echo $( ${WHICH} ${binary} 2>/dev/null | ${EGREP} "bin/${binary}$" | ${GREP} -v proc | ${HEAD} -n 1 )
+            ;;
+        "find")
+            for d in ${SPTH}; do
+                f=$( ${WHICH} ${d} -name ${binary} | ${EGREP} "bin/${binary}$" | ${GREP} -v proc | ${HEAD} -n 1 )
+                [[ ! "${f}" = "" ]] && break
+            done
+            echo "${f}"
+            ;;
+        *)
+            echo $( ${WHICH} ${binary} 2>/dev/null )
+            ;;
+    esac
 }
 
 scriptJob() {
-  s0=`echo ${SCRIPTNAME} | ${CUT} -d '.' -f 1`
-  echo $s0
+    s0=`echo ${SCRIPTNAME} | ${CUT} -d '.' -f 1`
+    echo $s0
 }
 
 AT=$( getBin at 2>/dev/null )
@@ -146,7 +146,7 @@ LSMOD=$( getBin lsmod 2>/dev/null )
 MD5SUM=$( getBin md5sum 2>/dev/null )
 NETCAT=$( getBin netcat 2>/dev/null )
 if [[ "${NETCAT}" = "" ]]; then
-  NETCAT=$( getBin nc 2>/dev/null )
+    NETCAT=$( getBin nc 2>/dev/null )
 fi
 NETSTAT=$( getBin netstat 2>/dev/null )
 OD=$( getBin od 2>/dev/null )
@@ -168,24 +168,24 @@ PING=$( getBin ping 2>/dev/null )
 UPTIME=$( getBin uptime 2>/dev/null )
 
 if [ "${HOME}" = "" ]; then
-  if [ "${home}" = "" ]; then
-    if [ "${WHOAMI}" != "" ]; then
-      user=$( ${WHOAMI} )
-      userhome="/home/${user}"
+    if [ "${home}" = "" ]; then
+        if [ "${WHOAMI}" != "" ]; then
+            user=$( ${WHOAMI} )
+            userhome="/home/${user}"
+        else
+            userhome="~"
+        fi
     else
-      userhome="~"
+        userhome="${home}"
     fi
-  else
-    userhome="${home}"
-  fi
 else
-  userhome="${HOME}"
+    userhome="${HOME}"
 fi
 
 export PATH="${userhome}/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
 SPTH="${userhome}/bin /bin /usr/bin /sbin /usr/sbin /usr/local/bin /usr/local/sbin"
 CONFDIR="${userhome}/.linuxcounter"
-CONFFILE="${CONFDIR}/config"
+OLDCONFFILE="${CONFDIR}/config"
 SPATH=$( pwd 2>/dev/null )
 mypath="$( cd -P "$( ${DIRNAME} "$0" )" && pwd )"
 SHADOW_FILE="/etc/shadow"
@@ -199,100 +199,104 @@ SCRIPT="${mypath}/${SCRIPTNAME}"
 
 TMPDIR=""
 if [ -w /tmp ]; then
-   TMPDIR="/tmp"
+    TMPDIR="/tmp"
 elif [ -w /var/tmp ]; then
-   TMPDIR="/var/tmp"
+    TMPDIR="/var/tmp"
 elif [ -w ${userhome}/tmp ]; then
-   TMPDIR="${userhome}/tmp"
+    TMPDIR="${userhome}/tmp"
 fi
 if [ ! -d ${CONFDIR} ]; then
-  mkdir -p ${CONFDIR}
+    mkdir -p ${CONFDIR}
 fi
 if [ "${TMPDIR}" = "" ]; then
-   TMPDIR="${CONFDIR}/tmp"
-   if [ ! -d ${TMPDIR} ]; then
-      mkdir -p ${TMPDIR}
-   fi
+    TMPDIR="${CONFDIR}/tmp"
+    if [ ! -d ${TMPDIR} ]; then
+        mkdir -p ${TMPDIR}
+    fi
 fi
 
 if [ "${CRONTAB}" = "" ]; then
-  CRONTAB=$( getBin fcrontab 2>/dev/null )
-  if [ "${CRONTAB}" = "" ]; then
-    echo "> No cron daemon found! Only cron or fcron are supported!"
-    echo "> Automatic machine updates through cron would not be possible!"
-  else
-    USECRON="fcrontab"
-  fi
+    CRONTAB=$( getBin fcrontab 2>/dev/null )
+    if [ "${CRONTAB}" = "" ]; then
+        echo "> No cron daemon found! Only cron or fcron are supported!"
+        echo "> Automatic machine updates through cron would not be possible!"
+    else
+        USECRON="fcrontab"
+    fi
 else
-  USECRON="crontab"
+    USECRON="crontab"
 fi
 
 releasefile=""
-if [ "${isBusyBox}" = "true" ]; then
-    releasefile=$( ${FIND} /etc -type f -iname "*-release" 2>/dev/null | ${HEAD} -n 1 | ${GREP} -v lsb | ${GREP} -i -v strato )
+if [ -r /etc/os-release ]; then
+    releasefile="/etc/os-release"
 else
-    releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*-release" | ${GREP} -v lsb | ${GREP} -i -v strato )
-fi
-if [ "${releasefile}" = "" ]; then
     if [ "${isBusyBox}" = "true" ]; then
-        releasefile=$( ${FIND} /etc -type f -iname "*version" 2>/dev/null | ${HEAD} -n 1 | ${GREP} -v lsb | ${GREP} -i -v strato )
+        releasefile=$( ${FIND} /etc -type f -iname "*-release" 2>/dev/null | ${HEAD} -n 1 | ${GREP} -v lsb | ${GREP} -i -v strato )
     else
-        releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*version" )
+        releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*-release" | ${GREP} -v lsb | ${GREP} -i -v strato )
+    fi
+    if [ "${releasefile}" = "" ]; then
+        if [ "${isBusyBox}" = "true" ]; then
+            releasefile=$( ${FIND} /etc -type f -iname "*version" 2>/dev/null | ${HEAD} -n 1 | ${GREP} -v lsb | ${GREP} -i -v strato )
+        else
+            releasefile=$( ${FIND} /etc -depth -mindepth 1 -maxdepth 1 -type f -iname "*version" )
+        fi
     fi
 fi
 
 if [ "${UNAME}" = "" ]; then
-  echo "> Program \"uname\" is needed to run this script!"
-  exit 1
+    echo "> Program \"uname\" is needed to run this script!"
+    exit 1
 fi
 
 OS=$( ${UNAME} )
 if [ "${OS}" != "Linux" ]; then
-  echo "This script actually supports only Linux!"
-  exit 1
+    echo "This script actually supports only Linux!"
+    exit 1
 fi
 
 if [ ! -r "${LSB_FILE}" -a "${LSB_RELEASE}" = "" -a "${releasefile}" = "" ]; then
-  echo "> Program \"lsb_release\" is needed to run this script!"
-  echo "  If this program is not available in your distribution repositories, then"
-  echo "  Please create the file \"${LSB_FILE}\" with the following content:"
-  echo "DISTRIB_ID=\"Your Distribution Name\""
-  echo "DISTRIB_RELEASE=\"The version string of your distribution\""
-  exit 1
+    echo "> Program \"lsb_release\" is needed to run this script!"
+    echo "  If this program is not available in your distribution repositories, then"
+    echo "  Please create the file \"${LSB_FILE}\" with the following content:"
+    echo "DISTRIB_ID=\"Your Distribution Name\""
+    echo "DISTRIB_RELEASE=\"The version string of your distribution\""
+    exit 1
 fi
 if [ "${GREP}" = "" ]; then
-  echo "> Program \"grep\" is needed to run this script!"
-  exit 1
+    echo "> Program \"grep\" is needed to run this script!"
+    exit 1
 fi
 if [ "${CAT}" = "" ]; then
-  echo "> Program \"cat\" is needed to run this script!"
-  exit 1
+    echo "> Program \"cat\" is needed to run this script!"
+    exit 1
 fi
 if [ "${HEAD}" = "" ]; then
-  echo "> Program \"head\" is needed to run this script!"
-  exit 1
+    echo "> Program \"head\" is needed to run this script!"
+    exit 1
 fi
 if [ "${TAIL}" = "" ]; then
-  echo "> Program \"tail\" is needed to run this script!"
-  exit 1
+    echo "> Program \"tail\" is needed to run this script!"
+    exit 1
 fi
 if [ "${AWK}" = "" ]; then
-  echo "> Program \"awk\" is needed to run this script!"
-  exit 1
+    echo "> Program \"awk\" is needed to run this script!"
+    exit 1
 fi
 if [ "${PING}" = "" ]; then
-  echo "> Program \"ping\" is needed to run this script!"
-  exit 1
+    echo "> Program \"ping\" is needed to run this script!"
+    exit 1
 fi
 if [ "${SED}" = "" -a "${OS}" = "Linux" ]; then
-  echo "> Program \"sed\" is needed to run this script!"
-  exit 1
+    echo "> Program \"sed\" is needed to run this script!"
+    exit 1
 fi
 
 if [ -z "${1}" ]; then
-  echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
-  echo " Use -h to get more help."
-  exit 1
+    echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
+    echo " Use -h to get more help."
+    exit 1
 fi
 
 interactive=0
@@ -306,90 +310,76 @@ doupdate=0
 wrongcmd=0
 while [ $# -gt 0 ]
 do
-  case "x${1}x" in
-    x-ix)           interactive=1;;
-    x-sx)           showdata=1;;
-    x-mx)           senddata=1;;
-    x-cix)          installcron=1;;
-    x-cux)          uninstallcron=1;;
-    x-hx)           showhelp=1;;
-    x-vx)           showversion=1;;
-    x-updatex)      doupdate=1;;
-    *)              wrongcmd=1;;
-  esac
-  shift
+    case "x${1}x" in
+        x-ix)           interactive=1;;
+        x-sx)           showdata=1;;
+        x-mx)           senddata=1;;
+        x-cix)          installcron=1;;
+        x-cux)          uninstallcron=1;;
+        x-hx)           showhelp=1;;
+        x-vx)           showversion=1;;
+        x-updatex)      doupdate=1;;
+        *)              wrongcmd=1;;
+    esac
+    shift
 done
 
 if [ ${wrongcmd} -eq 1 ]; then
-  echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
-  echo " Use -h to get more help."
-  exit 1
-fi
-
-if [ -r ${CONFFILE} ]; then
-  . ${CONFFILE}
-else
-  if [ ${interactive} -eq 0 ]; then
-    echo "Config file not found!"
-    echo "Please run \"${SCRIPTNAME} -i\" first."
+    echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
+    echo " Use -h to get more help."
     exit 1
-  fi
 fi
 
 getDistribution(){
-    if [ "${LSB_RELEASE}" = "" ]; then
-      if [ -r "${LSB_FILE}" ]; then
-        . ${LSB_FILE}
-        distribution="${DISTRIB_ID}"
-      else
-        release=""
-        if [ "${releasefile}" = "" ]; then
-          if [ -d "/var/smoothwall" ]; then
-            distribution="Smoothwall Linux"
-          elif [ -n "$( getBin sorcery 2>/dev/null | ${GREP} -v ' ' )" -a -n "$( getBin gaze 2>/dev/null | ${GREP} -v ' ' )" ]; then
-            distribution="Source Mage Linux"
-          else
-            distribution=""
-          fi
-        else
-          case "${releasefile}" in
-            /etc/gentoo-release)
-              distribution="Gentoo"
-              ;;
-            /var/ipcop/general-functions.pl)
-              distribution=`${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1`
-              ;;
-            /etc/debian_version)
-              distribution="Debian GNU/Linux"
-              ;;
-            /etc/GoboLinuxVersion)
-              distribution="GoboLinux"
-              ;;
-            /etc/knoppix-version)
-              distribution="Knoppix"
-              ;;
-            /etc/zenwalk-version)
-              distribution="Zenwalk"
-              ;;
-            /etc/os-release)
-              . /etc/os-release
-              distribution=${NAME}
-              ;;
-            *)
-              distribution=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
-              ;;
-          esac
-        fi
-        if [ "${release}" = "" ] && [ "${distribution}" = "" ]; then
-          distribution=""
-        elif [ "${distribution}" = "" ]; then
-          distribution=$( echo ${release} | ${AWK} '{print $1}' )
-        fi
-      fi
+    if [ "${releasefile}" = "/etc/os-release" ]; then
+        . /etc/os-release
+        distribution=${NAME}
     else
-        if [ "${releasefile}" = "/etc/os-release" ]; then
-            . /etc/os-release
-            distribution=${NAME}
+        if [ "${LSB_RELEASE}" = "" ]; then
+            if [ -r "${LSB_FILE}" ]; then
+                . ${LSB_FILE}
+                distribution="${DISTRIB_ID}"
+            else
+                release=""
+                if [ "${releasefile}" = "" ]; then
+                    if [ -d "/var/smoothwall" ]; then
+                        distribution="Smoothwall Linux"
+                    elif [ -n "$( getBin sorcery 2>/dev/null | ${GREP} -v ' ' )" -a -n "$( getBin gaze 2>/dev/null | ${GREP} -v ' ' )" ]; then
+                        distribution="Source Mage Linux"
+                    else
+                        distribution=""
+                    fi
+                else
+                    case "${releasefile}" in
+                        /etc/gentoo-release)
+                            distribution="Gentoo"
+                            ;;
+                        /var/ipcop/general-functions.pl)
+                            distribution=`${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1`
+                            ;;
+                        /etc/debian_version)
+                            distribution="Debian GNU/Linux"
+                            ;;
+                        /etc/GoboLinuxVersion)
+                            distribution="GoboLinux"
+                            ;;
+                        /etc/knoppix-version)
+                            distribution="Knoppix"
+                            ;;
+                        /etc/zenwalk-version)
+                            distribution="Zenwalk"
+                            ;;
+                        *)
+                            distribution=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
+                            ;;
+                    esac
+                fi
+                if [ "${release}" = "" ] && [ "${distribution}" = "" ]; then
+                    distribution=""
+                elif [ "${distribution}" = "" ]; then
+                    distribution=$( echo ${release} | ${AWK} '{print $1}' )
+                fi
+            fi
         else
             distribution=$(${LSB_RELEASE} -is)
         fi
@@ -399,48 +389,48 @@ getDistribution(){
 
 getDistribVersion(){
     if [ "${LSB_RELEASE}" = "" ]; then
-      if [ -r "${LSB_FILE}" ]; then
-        . ${LSB_FILE}
-        distribversion="${DISTRIB_RELEASE}"
-      else
-        release=""
-        case "${releasefile}" in
-#            /etc/gentoo-release)
-#              if [ -h /etc/make.profile ]; then
-#                release=$( ${LS} -l /etc/make.profile 2>/dev/null | ${SED} -e 's;^.*/\([^/]*/[^/]*\)$;\1;' | tr '/' ' ' )
-#              else
-#                release=""
-#              fi
-#              ;;
-            /var/ipcop/general-functions.pl)
-              release=$( ${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1 )
-              ;;
-            /etc/debian_version)
-              release=$( ${CAT} ${releasefile} )
-              ;;
-            /etc/GoboLinuxVersion)
-              release=$( ${CAT} ${releasefile} )
-              ;;
-            /etc/knoppix-version)
-              release=$( ${CAT} ${releasefile} )
-              ;;
-            /etc/zenwalk-version)
-              release=$( ${CAT} ${releasefile} )
-              ;;
-            /etc/os-release)
-              . /etc/os-release
-              release=${VERSION}
-              ;;
-            *)
-              release=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
-              ;;
-        esac
-        if [ "${release}" = "" ]; then
-          distribversion=""
+        if [ -r "${LSB_FILE}" ]; then
+            . ${LSB_FILE}
+            distribversion="${DISTRIB_RELEASE}"
         else
-          distribversion=${release}
+            release=""
+            case "${releasefile}" in
+                #            /etc/gentoo-release)
+                #              if [ -h /etc/make.profile ]; then
+                #                release=$( ${LS} -l /etc/make.profile 2>/dev/null | ${SED} -e 's;^.*/\([^/]*/[^/]*\)$;\1;' | tr '/' ' ' )
+                #              else
+                #                release=""
+                #              fi
+                #              ;;
+                /var/ipcop/general-functions.pl)
+                    release=$( ${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1 )
+                    ;;
+                /etc/debian_version)
+                    release=$( ${CAT} ${releasefile} )
+                    ;;
+                /etc/GoboLinuxVersion)
+                    release=$( ${CAT} ${releasefile} )
+                    ;;
+                /etc/knoppix-version)
+                    release=$( ${CAT} ${releasefile} )
+                    ;;
+                /etc/zenwalk-version)
+                    release=$( ${CAT} ${releasefile} )
+                    ;;
+                /etc/os-release)
+                    . /etc/os-release
+                    release=${VERSION}
+                    ;;
+                *)
+                    release=$( ${CAT} ${releasefile} 2>/dev/null | ${HEAD} -n 1 )
+                    ;;
+            esac
+            if [ "${release}" = "" ]; then
+                distribversion=""
+            else
+                distribversion=${release}
+            fi
         fi
-      fi
     else
         if [ "${releasefile}" = "/etc/os-release" ]; then
             . /etc/os-release
@@ -454,176 +444,176 @@ getDistribVersion(){
 
 # Displays OS name for example FreeBSD, Linux etc
 getOs(){
-  echo "$(${UNAME})"
+    echo "$(${UNAME})"
 }
 
 # Display hostname
 # host (FQDN hostname), for example, vivek (vivek.text.com)
 getHostName(){
-  # try 'hostname -f'
-  myhostname=$(${HNAME} -f 2>/dev/null || echo "")
-  if [ "${OS}" = "Linux" ]; then
-    if [ "${HOSTNAME}" = "" ]; then
-      if [ -e /etc/hostname ] ; then
-        myhostname=$( ${CAT} /etc/hostname 2>/dev/null )
-      else
-        myhostname=$( ${CAT} /proc/sys/kernel/hostname 2>/dev/null )
-        mydomname=$( ${CAT} /proc/sys/kernel/domainname 2>/dev/null )
-        if [ "${mydomname}" = "(none)" ]; then
-          mydomname="unknown-domain"
+    # try 'hostname -f'
+    myhostname=$(${HNAME} -f 2>/dev/null || echo "")
+    if [ "${OS}" = "Linux" ]; then
+        if [ "${HOSTNAME}" = "" ]; then
+            if [ -e /etc/hostname ] ; then
+                myhostname=$( ${CAT} /etc/hostname 2>/dev/null )
+            else
+                myhostname=$( ${CAT} /proc/sys/kernel/hostname 2>/dev/null )
+                mydomname=$( ${CAT} /proc/sys/kernel/domainname 2>/dev/null )
+                if [ "${mydomname}" = "(none)" ]; then
+                    mydomname="unknown-domain"
+                fi
+                myhostname=${myhostname}.${mydomname}
+            fi
+        else
+            myhostname=$( ${HOSTNAME} )
         fi
-        myhostname=${myhostname}.${mydomname}
-      fi
-    else
-      myhostname=$( ${HOSTNAME} )
     fi
-  fi
-  if [ "${myhostname}" = "" ]; then
-    echo "The hostname of this machine couldn't be found."
-  echo "Please install the \"inetutils\" (a.k.a. net-tools) package."
-    exit 1
-  else
-    echo ${myhostname}
-  fi
+    if [ "${myhostname}" = "" ]; then
+        echo "The hostname of this machine couldn't be found."
+        echo "Please install the \"inetutils\" (a.k.a. net-tools) package."
+        exit 1
+    else
+        echo ${myhostname}
+    fi
 }
 
 # Display CPU information such as Make, speed
 getAccounts(){
-  if [ "${OS}" = "Linux" ]; then
-    UID_MIN=""
-    UID_MAX=""
-    if [ -r "${LOGINDEFS_FILE}" ]; then
-      UID_MIN=$( ${EGREP} "^UID_MIN" ${LOGINDEFS_FILE} | ${AWK} '{print $2}' )
-      UID_MAX=$( ${EGREP} "^UID_MAX" ${LOGINDEFS_FILE} | ${AWK} '{print $2}' )
+    if [ "${OS}" = "Linux" ]; then
+        UID_MIN=""
+        UID_MAX=""
+        if [ -r "${LOGINDEFS_FILE}" ]; then
+            UID_MIN=$( ${EGREP} "^UID_MIN" ${LOGINDEFS_FILE} | ${AWK} '{print $2}' )
+            UID_MAX=$( ${EGREP} "^UID_MAX" ${LOGINDEFS_FILE} | ${AWK} '{print $2}' )
+        fi
+        if [ "${UID_MIN}" = "" ]; then
+            UID_MIN=1000
+        fi
+        if [ "${UID_MAX}" = "" ]; then
+            UID_MAX=10000
+        fi
+        echo $(${CAT} ${PASSWD_FILE} 2>/dev/null | ${AWK} -F':' '{ if($3 >= '${UID_MIN}' && $3 <= '${UID_MAX}') print $0 }' | ${WC} -l)
     fi
-    if [ "${UID_MIN}" = "" ]; then
-      UID_MIN=1000
-    fi
-    if [ "${UID_MAX}" = "" ]; then
-      UID_MAX=10000
-    fi
-    echo $(${CAT} ${PASSWD_FILE} 2>/dev/null | ${AWK} -F':' '{ if($3 >= '${UID_MIN}' && $3 <= '${UID_MAX}') print $0 }' | ${WC} -l)
-  fi
 }
 
 # Get CPU model name
 getCpuInfo(){
-  if [ "${distribution}" = "OpenWrt" ]; then
-    [ "${OS}" = "Linux" ] && echo $(${GREP} -i "cpu model" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
-  else
-    [ "${OS}" = "Linux" ] && echo $(${GREP} -i "model name" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
-  fi
+    if [ "${distribution}" = "OpenWrt" ]; then
+        [ "${OS}" = "Linux" ] && echo $(${GREP} -i "cpu model" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
+    else
+        [ "${OS}" = "Linux" ] && echo $(${GREP} -i "model name" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
+    fi
 }
 
 # Get CPU MHz
 getCpuFreq(){
-  [ "${OS}" = "Linux" ] && echo $(${GREP} -i "cpu mhz" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
+    [ "${OS}" = "Linux" ] && echo $(${GREP} -i "cpu mhz" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
 }
 
 # get CPU flags
 getCpuFlags(){
-  [ "${OS}" = "Linux" ] && echo $(${GREP} -i "flags" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
+    [ "${OS}" = "Linux" ] && echo $(${GREP} -i "flags" /proc/cpuinfo | ${HEAD} -n 1 | ${SED} "s/.*: \(.*\)/\1/") || :
 }
 
 # get CPU Cores
 getNumCPUCores(){
-  if [ "${distribution}" = "OpenWrt" ]; then
-    [ "${OS}" = "Linux" ] && echo $(${GREP} -i "cpu model" /proc/cpuinfo | ${WC} -l) || :
-  else
-    [ "${OS}" = "Linux" ] && echo $(${GREP} -i "model name" /proc/cpuinfo | ${WC} -l) || :
-  fi
+    if [ "${distribution}" = "OpenWrt" ]; then
+        [ "${OS}" = "Linux" ] && echo $(${GREP} -i "cpu model" /proc/cpuinfo | ${WC} -l) || :
+    else
+        [ "${OS}" = "Linux" ] && echo $(${GREP} -i "model name" /proc/cpuinfo | ${WC} -l) || :
+    fi
 }
 
 # Display total RAM in system
 getTotalRam(){
-  mem=$( ${GREP} -i "memtotal" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
-  echo $(( ${mem} / 1000 ))
+    mem=$( ${GREP} -i "memtotal" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
+    echo $(( ${mem} / 1000 ))
 }
 
 # Display free RAM in system
 getFreeRam(){
-  mem=$( ${GREP} -i "memfree" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
-  echo $(( ${mem} / 1000 ))
+    mem=$( ${GREP} -i "memfree" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
+    echo $(( ${mem} / 1000 ))
 }
 
 # Display total Swap in system
 getTotalSwap(){
-  mem=$( ${GREP} -i "swaptotal" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
-  echo $(( ${mem} / 1000 ))
+    mem=$( ${GREP} -i "swaptotal" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
+    echo $(( ${mem} / 1000 ))
 }
 
 # Display free Swap in system
 getFreeSwap(){
-  mem=$( ${GREP} -i "swapfree" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
-  echo $(( ${mem} / 1000 ))
+    mem=$( ${GREP} -i "swapfree" /proc/meminfo | ${HEAD} -n 1 | ${SED} "s/.*: *\(.*\) kB/\1/" )
+    echo $(( ${mem} / 1000 ))
 }
 
 # Display system load for last 5,10,15 minutes
 getSystemLoad(){
-  [ "${OS}" = "Linux" ] && echo "$(${UPTIME} | ${AWK} -F'load average: ' '{ print $2 }')" || :
+    [ "${OS}" = "Linux" ] && echo "$(${UPTIME} | ${AWK} -F'load average: ' '{ print $2 }')" || :
 }
 
 # List total number of users logged in (both Linux and FreeBSD)
 getNumberOfLoggedInUsers(){
-  [ "${OS}" = "Linux" ] && echo "$(${W} -h | ${CUT} -d " " -f 1 | ${SORT} -u | ${WC} -l)" || :
+    [ "${OS}" = "Linux" ] && echo "$(${W} -h | ${CUT} -d " " -f 1 | ${SORT} -u | ${WC} -l)" || :
 }
 
 getTotalDiskSpace() {
-  if [ "${OS}" = "Linux" ]; then
-    olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
-    if [ "${olddf}" = "1" ]; then
-      space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
-    else
-      space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+    if [ "${OS}" = "Linux" ]; then
+        olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
+        if [ "${olddf}" = "1" ]; then
+            space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+        else
+            space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+        fi
+        echo $(( ${space} / 1000 ))
     fi
-    echo $(( ${space} / 1000 ))
-  fi
 }
 
 getFreeDiskSpace() {
-  if [ "${OS}" = "Linux" ]; then
-    olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
-    if [ "${olddf}" = "1" ]; then
-      space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
-    else
-      space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+    if [ "${OS}" = "Linux" ]; then
+        olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
+        if [ "${olddf}" = "1" ]; then
+            space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+        else
+            space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+        fi
+        echo $(( ${space} / 1000 ))
     fi
-    echo $(( ${space} / 1000 ))
-  fi
 }
 
 getUptime() {
-  if [ "${OS}" = "Linux" ]; then
-    if [ -r /proc/uptime ]; then
-        uptime=$( ${CUT} -d "." -f 1 /proc/uptime )
+    if [ "${OS}" = "Linux" ]; then
+        if [ -r /proc/uptime ]; then
+            uptime=$( ${CUT} -d "." -f 1 /proc/uptime )
+        fi
+        echo ${uptime}
     fi
-    echo ${uptime}
-  fi
 }
 
 getOnlineStatus() {
-  if [ "${OS}" = "Linux" ]; then
-    pingstatus=$( ${PING} -q -c 1 linuxcounter.net 2>&1 | ${GREP} -i packet | ${CUT} -d " " -f 1 )
-    [ "${pingstatus}" = "" ] && echo "0"
-    [ "${pingstatus}" -gt 0 ] && echo "1"
-  fi
+    if [ "${OS}" = "Linux" ]; then
+        pingstatus=$( ${PING} -q -c 1 linuxcounter.net 2>&1 | ${GREP} -i packet | ${CUT} -d " " -f 1 )
+        [ "${pingstatus}" = "" ] && echo "0"
+        [ "${pingstatus}" -gt 0 ] && echo "1"
+    fi
 }
 
 getNetwork(){
-  if [ "${OS}" = "Linux" ]; then
-    wlan=$( ${IWCONFIG} 2>/dev/null | ${GREP} -i essid )
-    if [ "${wlan}" != "" ]; then
-        network="wireless"
-    else
-        network="ethernet"
+    if [ "${OS}" = "Linux" ]; then
+        wlan=$( ${IWCONFIG} 2>/dev/null | ${GREP} -i essid )
+        if [ "${wlan}" != "" ]; then
+            network="wireless"
+        else
+            network="ethernet"
+        fi
+        echo ${network}
     fi
-    echo ${network}
-  fi
 }
 
 # Encode argument as application/x-www-form-urlencoded
 urlEncode(){
-  echo "${1}" | ${AWK} '
+    echo "${1}" | ${AWK} '
     BEGIN { RS = sprintf("%c", 0) }  # operate on whole text including newlines
     { gsub(/%/,"%25")
       for (i = 1; i < 10; ++i) gsub(sprintf("%c", i),"%" sprintf("%.2X", i) )
@@ -647,21 +637,21 @@ urlEncode(){
 
 parse_json(){
     echo "$1" | \
-    sed "s/:\([0-9]\)/:\"\1/g" | \
-    sed "s/\([0-9]\),\"/\1\",\"/g" | \
-    sed "s/\([0-9]\)\}/\1\"}/g" | \
-    sed -e 's/[{}]/''/g' | \
-    sed -e 's/", "/'\",\"'/g' | \
-    sed -e 's/" ,"/'\",\"'/g' | \
-    sed -e 's/" , "/'\",\"'/g' | \
-    sed -e 's/","/'\"---SEPERATOR---\"'/g' | \
-    awk -F=':' -v RS='---SEPERATOR---' "\$1~/\"$2\"/ {print}" | \
-    sed -e "s/\"$2\"://" | \
-    tr -d "\n\t" | \
-    sed -e 's/\\"/"/g' | \
-    sed -e 's/\\\\/\\/g' | \
-    sed -e 's/^[ \t]*//g' | \
-    sed -e 's/^"//'  -e 's/"$//'
+        sed "s/:\([0-9]\)/:\"\1/g" | \
+        sed "s/\([0-9]\),\"/\1\",\"/g" | \
+        sed "s/\([0-9]\)\}/\1\"}/g" | \
+        sed -e 's/[{}]/''/g' | \
+        sed -e 's/", "/'\",\"'/g' | \
+        sed -e 's/" ,"/'\",\"'/g' | \
+        sed -e 's/" , "/'\",\"'/g' | \
+        sed -e 's/","/'\"---SEPERATOR---\"'/g' | \
+        awk -F=':' -v RS='---SEPERATOR---' "\$1~/\"$2\"/ {print}" | \
+        sed -e "s/\"$2\"://" | \
+        tr -d "\n\t" | \
+        sed -e 's/\\"/"/g' | \
+        sed -e 's/\\\\/\\/g' | \
+        sed -e 's/^[ \t]*//g' | \
+        sed -e 's/^"//'  -e 's/"$//'
 }
 
 sendDataToApi(){
@@ -680,27 +670,27 @@ sendDataToApi(){
         exit 1
     fi
     curl -s --request PATCH \
-    "${apiurl}/machines/${machine_id}" \
-    --header "x-lico-machine-updatekey: ${machine_updatekey}" \
-    --data "hostname=${hostname}" \
-    --data "distribution=${distribution}" \
-    --data "distversion=${distversion}" \
-    --data "kernel=${kernel}" \
-    --data "architecture=${architecture}" \
-    --data "cpu=${cpu}" \
-    --data "cores=${cores}" \
-    --data "flags=${flags}" \
-    --data "memory=${memory}" \
-    --data "memoryFree=${memoryFree}" \
-    --data "swap=${swap}" \
-    --data "swapFree=${swapFree}" \
-    --data "loadavg=${loadavg}" \
-    --data "accounts=${accounts}" \
-    --data "diskspace=${diskspace}" \
-    --data "diskspaceFree=${diskspaceFree}" \
-    --data "uptime=${uptime}" \
-    --data "network=${network}" \
-    --data "online=${online}"
+        "${apiurl}/machines/${machine_id}" \
+        --header "x-lico-machine-updatekey: ${machine_updatekey}" \
+        --data "hostname=${hostname}" \
+        --data "distribution=${distribution}" \
+        --data "distversion=${distversion}" \
+        --data "kernel=${kernel}" \
+        --data "architecture=${architecture}" \
+        --data "cpu=${cpu}" \
+        --data "cores=${cores}" \
+        --data "flags=${flags}" \
+        --data "memory=${memory}" \
+        --data "memoryFree=${memoryFree}" \
+        --data "swap=${swap}" \
+        --data "swapFree=${swapFree}" \
+        --data "loadavg=${loadavg}" \
+        --data "accounts=${accounts}" \
+        --data "diskspace=${diskspace}" \
+        --data "diskspaceFree=${diskspaceFree}" \
+        --data "uptime=${uptime}" \
+        --data "network=${network}" \
+        --data "online=${online}"
     echo "> Data successfully sent."
 }
 
@@ -736,8 +726,8 @@ uninstallCronjob(){
         status=$?
         rm ${TMPDIR}/crontab.tmp
         if [ ${status} -ne 0 ]; then
-           echo "! cron encountered a problem and exited with status ${status}"
-           exit ${status}
+            echo "! cron encountered a problem and exited with status ${status}"
+            exit ${status}
         fi
         echo "> The cronjob was successfully removed!"
     fi
@@ -755,39 +745,60 @@ updateScript(){
     fi
 }
 
+thishostname=$(getHostName)
+CONFFILE="${CONFDIR}/${thishostname}"
+if [ -r ${OLDCONFFILE} ]; then
+    mv ${OLDCONFFILE} ${CONFFILE}
+fi
+
+if [ -r ${CONFFILE} ]; then
+    . ${CONFFILE}
+    if [ -z ${apikey+x} ]; then
+        rm -fr ${CONFFILE}
+    fi
+fi
+
+if [ ! -r ${CONFFILE} ]; then
+    if [ ${interactive} -eq 0 ]; then
+        echo "Config file not found!"
+        echo "Please run \"${SCRIPTNAME} -i\" first."
+        exit 1
+    fi
+fi
+
 if [ ${showhelp} -eq 1 ]; then
-  echo ""
-  echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
-  echo ""
-  echo "   -i           Use this switch to enter interactive mode. The script will"
-  echo "                then ask you a few questions related your counter"
-  echo "                membership. Your entered data will be stored in"
-  echo "                ${CONFFILE}"
-  echo ""
-  echo "   -s           This will show you what will be sent to the counter, without"
-  echo "                sending anything."
-  echo ""
-  echo "   -m           Use this switch to let the script send the collected data"
-  echo "                to the counter project. If the machine entry does not exist,"
-  echo "                the script will exit with code 1."
-  echo ""
-  echo "   -ci          Use this switch to automatically create a cronjob (or at job)"
-  echo "                for this script. The data will then get sent once per week."
-  echo ""
-  echo "   -cu          Use this to uninstall the cronjob (or at job)"
-  echo ""
-  echo "   -h           Well, you've just used that switch, no?"
-  echo "   -v           This gives you the version of this script"
-  echo ""
-  echo "   -update      Get and install the most recent version of this script (may need sudo!)"
-  echo ""
-  echo " More information here:  https://www.linuxcounter.net/download"
-  echo ""
+    echo ""
+    echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
+    echo ""
+    echo "   -i           Use this switch to enter interactive mode. The script will"
+    echo "                then ask you a few questions related your counter"
+    echo "                membership. Your entered data will be stored in"
+    echo "                ${CONFFILE}"
+    echo ""
+    echo "   -s           This will show you what will be sent to the counter, without"
+    echo "                sending anything."
+    echo ""
+    echo "   -m           Use this switch to let the script send the collected data"
+    echo "                to the counter project. If the machine entry does not exist,"
+    echo "                the script will exit with code 1."
+    echo ""
+    echo "   -ci          Use this switch to automatically create a cronjob (or at job)"
+    echo "                for this script. The data will then get sent once per week."
+    echo ""
+    echo "   -cu          Use this to uninstall the cronjob (or at job)"
+    echo ""
+    echo "   -h           Well, you've just used that switch, no?"
+    echo "   -v           This gives you the version of this script"
+    echo ""
+    echo "   -update      Get and install the most recent version of this script (may need sudo!)"
+    echo ""
+    echo " More information here:  https://www.linuxcounter.net/download"
+    echo ""
 fi
 if [ ${showversion} -eq 1 ]; then
-  echo ""
-  echo " ${lico_script_version}"
-  echo ""
+    echo ""
+    echo " ${lico_script_version}"
+    echo ""
 fi
 if [ ${installcron} -eq 1 ]; then
     installCronjob

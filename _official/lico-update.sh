@@ -805,7 +805,7 @@ updateScript(){
         chmod +x ${MYPATH}
     else
         sudo mv /tmp/lico-update.sh ${MYPATH}
-        chmod +x ${MYPATH}
+        sudo chmod +x ${MYPATH}
     fi
 }
 

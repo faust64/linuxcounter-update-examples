@@ -4,13 +4,13 @@
 #license         : GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 #author          : Alexander Löhner <alex.loehner@linux.com>
 #date            : 20150415
-#version         : 0.0.3
+#version         : 0.0.4
 #usage           : sh lico-update.sh
 #notes           : grep, egrep, sed, awk, which and some more standard tools are needed to run this script
 #bash_version    : GNU bash, Version 4.3.11(1)-release (x86_64-pc-linux-gnu)
 #==============================================================================
 
-lico_script_version="0.0.3"
+lico_script_version="0.0.4"
 lico_script_name="lico-update.sh"
 
 apiurl="http://api.linuxcounter.net/v1"
@@ -477,6 +477,19 @@ getHostName(){
     fi
 }
 
+thishostname=$(getHostName)
+CONFFILE="${CONFDIR}/${thishostname}"
+if [ -r ${OLDCONFFILE} ]; then
+    mv ${OLDCONFFILE} ${CONFFILE}
+fi
+
+if [ -r ${CONFFILE} ]; then
+    . ${CONFFILE}
+    if [ -z ${apikey+x} ]; then
+        rm -fr ${CONFFILE}
+    fi
+fi
+
 # Display CPU information such as Make, speed
 getAccounts(){
     if [ "${OS}" = "Linux" ]; then
@@ -654,6 +667,56 @@ parse_json(){
         sed -e 's/^"//'  -e 's/"$//'
 }
 
+scanSystem(){
+    script=${scriptversion}
+    hostname=$(getHostName)
+    distribution=$(getDistribution)
+    distversion=$(getDistribVersion)
+    version=$(${UNAME} -r)
+    machine=$(${UNAME} -m)
+    processor=$(getCpuInfo)
+    cpunum=$(getNumCPUCores)
+    flags=$(getCpuFlags)
+    totalram=$(getTotalRam)
+    freeram=$(getFreeRam)
+    totalswap=$(getTotalSwap)
+    freeswap=$(getFreeSwap)
+    load=$(getSystemLoad)
+    date=$(${DATE})
+    numusers=$(getNumberOfLoggedInUsers)
+    accounts=$(getAccounts)
+    totaldisk=$(getTotalDiskSpace)
+    freedisk=$(getFreeDiskSpace)
+    uptime=$(getUptime)
+    cpufreq=$(getCpuFreq)
+    update_key=""
+    network=$(getNetwork)
+    online=$(getOnlineStatus)
+    echo "apikey=\"${apikey}\"" > ${CONFFILE}
+    echo "machine_id=\"${machine_id}\"" >> ${CONFFILE}
+    echo "machine_updatekey=\"${machine_updatekey}\"" >> ${CONFFILE}
+    echo "hostname=\"${hostname}\"" >> ${CONFFILE}
+    echo "distribution=\"${distribution}\"" >> ${CONFFILE}
+    echo "distversion=\"${distversion}\"" >> ${CONFFILE}
+    echo "kernel=\"${version}\"" >> ${CONFFILE}
+    echo "architecture=\"${machine}\"" >> ${CONFFILE}
+    echo "cpu=\"${processor}\"" >> ${CONFFILE}
+    echo "cores=\"${cpunum}\"" >> ${CONFFILE}
+    echo "flags=\"${flags}\"" >> ${CONFFILE}
+    echo "memory=\"${totalram}\"" >> ${CONFFILE}
+    echo "memoryFree=\"${freeram}\"" >> ${CONFFILE}
+    echo "swap=\"${totalswap}\"" >> ${CONFFILE}
+    echo "swapFree=\"${freeswap}\"" >> ${CONFFILE}
+    echo "loadavg=\"${load}\"" >> ${CONFFILE}
+    echo "accounts=\"${accounts}\"" >> ${CONFFILE}
+    echo "diskspace=\"${totaldisk}\"" >> ${CONFFILE}
+    echo "diskspaceFree=\"${freedisk}\"" >> ${CONFFILE}
+    echo "uptime=\"${uptime}\"" >> ${CONFFILE}
+    echo "network=\"${network}\"" >> ${CONFFILE}
+    echo "online=\"${online}\"" >> ${CONFFILE}
+    echo "### config start"
+}
+
 sendDataToApi(){
     . ${CONFFILE}
     echo "> Sending the data to your machine in your account using the API..."
@@ -669,6 +732,8 @@ sendDataToApi(){
         echo "! machine_updatekey is not set! Please run the script with \"-i\" and choose [1]!"
         exit 1
     fi
+    scanSystem
+    . ${CONFFILE}
     curl -s --request PATCH \
         "${apiurl}/machines/${machine_id}" \
         --header "x-lico-machine-updatekey: ${machine_updatekey}" \
@@ -744,19 +809,6 @@ updateScript(){
         chmod +x ${MYPATH}
     fi
 }
-
-thishostname=$(getHostName)
-CONFFILE="${CONFDIR}/${thishostname}"
-if [ -r ${OLDCONFFILE} ]; then
-    mv ${OLDCONFFILE} ${CONFFILE}
-fi
-
-if [ -r ${CONFFILE} ]; then
-    . ${CONFFILE}
-    if [ -z ${apikey+x} ]; then
-        rm -fr ${CONFFILE}
-    fi
-fi
 
 if [ ! -r ${CONFFILE} ]; then
     if [ ${interactive} -eq 0 ]; then
@@ -880,53 +932,7 @@ if [ ${interactive} -eq 1 ]; then
     if [ ${interactive_action} -eq 3 ]; then
         echo "> Scanning this system..."
         echo ""
-        script=${scriptversion}
-        hostname=$(getHostName)
-        distribution=$(getDistribution)
-        distversion=$(getDistribVersion)
-        version=$(${UNAME} -r)
-        machine=$(${UNAME} -m)
-        processor=$(getCpuInfo)
-        cpunum=$(getNumCPUCores)
-        flags=$(getCpuFlags)
-        totalram=$(getTotalRam)
-        freeram=$(getFreeRam)
-        totalswap=$(getTotalSwap)
-        freeswap=$(getFreeSwap)
-        load=$(getSystemLoad)
-        date=$(${DATE})
-        numusers=$(getNumberOfLoggedInUsers)
-        accounts=$(getAccounts)
-        totaldisk=$(getTotalDiskSpace)
-        freedisk=$(getFreeDiskSpace)
-        uptime=$(getUptime)
-        cpufreq=$(getCpuFreq)
-        update_key=""
-        network=$(getNetwork)
-        online=$(getOnlineStatus)
-        echo "apikey=\"${apikey}\"" > ${CONFFILE}
-        echo "machine_id=\"${machine_id}\"" >> ${CONFFILE}
-        echo "machine_updatekey=\"${machine_updatekey}\"" >> ${CONFFILE}
-        echo "hostname=\"${hostname}\"" >> ${CONFFILE}
-        echo "distribution=\"${distribution}\"" >> ${CONFFILE}
-        echo "distversion=\"${distversion}\"" >> ${CONFFILE}
-        echo "kernel=\"${version}\"" >> ${CONFFILE}
-        echo "architecture=\"${machine}\"" >> ${CONFFILE}
-        echo "cpu=\"${processor}\"" >> ${CONFFILE}
-        echo "cores=\"${cpunum}\"" >> ${CONFFILE}
-        echo "flags=\"${flags}\"" >> ${CONFFILE}
-        echo "memory=\"${totalram}\"" >> ${CONFFILE}
-        echo "memoryFree=\"${freeram}\"" >> ${CONFFILE}
-        echo "swap=\"${totalswap}\"" >> ${CONFFILE}
-        echo "swapFree=\"${freeswap}\"" >> ${CONFFILE}
-        echo "loadavg=\"${load}\"" >> ${CONFFILE}
-        echo "accounts=\"${accounts}\"" >> ${CONFFILE}
-        echo "diskspace=\"${totaldisk}\"" >> ${CONFFILE}
-        echo "diskspaceFree=\"${freedisk}\"" >> ${CONFFILE}
-        echo "uptime=\"${uptime}\"" >> ${CONFFILE}
-        echo "network=\"${network}\"" >> ${CONFFILE}
-        echo "online=\"${online}\"" >> ${CONFFILE}
-        echo "### config start"
+        scanSystem
         cat ${CONFFILE}
         echo "### config end"
         echo ""

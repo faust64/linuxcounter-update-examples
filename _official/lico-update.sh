@@ -799,7 +799,7 @@ uninstallCronjob(){
 
 updateScript(){
     whoami=$( whoami )
-    ${WGET} -O /tmp/lico-update.sh https://github.com/alexloehner/linuxcounter-update-examples/raw/master/_official/lico-update.sh
+    ${WGET} -O /tmp/lico-update.sh 'https://raw.githubusercontent.com/alexloehner/linuxcounter-update-examples/master/_official/lico-update.sh'
     if [ "${whoami}" = "root" ]; then
         mv /tmp/lico-update.sh ${MYPATH}
         chmod +x ${MYPATH}

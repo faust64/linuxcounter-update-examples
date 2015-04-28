@@ -714,7 +714,6 @@ scanSystem(){
     echo "uptime=\"${uptime}\"" >> ${CONFFILE}
     echo "network=\"${network}\"" >> ${CONFFILE}
     echo "online=\"${online}\"" >> ${CONFFILE}
-    echo "### config start"
 }
 
 sendDataToApi(){
@@ -933,6 +932,7 @@ if [ ${interactive} -eq 1 ]; then
         echo "> Scanning this system..."
         echo ""
         scanSystem
+        echo "### config start"
         cat ${CONFFILE}
         echo "### config end"
         echo ""

@@ -5,9 +5,6 @@ The lico-update.sh script is the new official machine update script for the new 
   - Update your linuxcounter machines directly via this script without the need for log into your account
   - Automate the machine update by installing a cronjob by invoking a simple command
 
-### Version
-0.0.1  -  Initial version, mostly c&p'ed from the old script, but also modified for working with the new API and enhanced with bugfixes and better functions
-
 ### Installation
 
 Download the file "lico-update.sh" from github, move it into your PATH and make it executable:

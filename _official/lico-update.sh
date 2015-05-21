@@ -292,6 +292,10 @@ if [ "${SED}" = "" -a "${OS}" = "Linux" ]; then
     echo "> Program \"sed\" is needed to run this script!"
     exit 1
 fi
+if [ "${CURL}" = "" ]; then
+    echo "> Program \"curl\" is needed to run this script!"
+    exit 1
+fi
 
 if [ -z "${1}" ]; then
     echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
@@ -733,7 +737,7 @@ sendDataToApi(){
     fi
     scanSystem
     . ${CONFFILE}
-    curl -s --request PATCH \
+    ${CURL} -s --request PATCH \
         "${apiurl}/machines/${machine_id}" \
         --header "x-lico-machine-updatekey: ${machine_updatekey}" \
         --data "hostname=${hostname}" \
@@ -908,7 +912,7 @@ if [ ${interactive} -eq 1 ]; then
             exit 1
         fi
         echo "> Sending \"create machine\" request to the API..."
-        response=$( curl -s --request POST "${apiurl}/machines" --header "x-lico-apikey: ${apikey}" )
+        response=$( ${CURL} -s --request POST "${apiurl}/machines" --header "x-lico-apikey: ${apikey}" )
         machine_id=$( parse_json "${response}" machine_id )
         machine_updatekey=$( parse_json "${response}" machine_updatekey )
         echo "machine_id=\"${machine_id}\"" >> ${CONFFILE}

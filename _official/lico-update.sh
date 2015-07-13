@@ -491,6 +491,7 @@ if [ -r ${CONFFILE} ]; then
     . ${CONFFILE}
     if [ -z ${apikey+x} ]; then
         rm -fr ${CONFFILE}
+        unset machine_id
     fi
 fi
 
@@ -813,10 +814,11 @@ updateScript(){
     fi
 }
 
-if [ ! -r ${CONFFILE} ]; then
-    if [ ${interactive} -eq 0 ]; then
-        echo "Config file not found!"
-        echo "Please run \"${SCRIPTNAME} -i\" first."
+# Require working configuration for commands which need it
+if [ -z ${machine_id+x} ]; then
+    if [[ ${installcron} -eq 1 ]] || [[ ${showdata} -eq 1 ]] || [[ ${senddata} -eq 1 ]]; then
+        echo "Configuration is missing or incomplete!"
+        echo "Please run \"${SCRIPTNAME} -i\" first and register this machine."
         exit 1
     fi
 fi
@@ -948,7 +950,14 @@ if [ ${interactive} -eq 1 ]; then
     fi
 
     if [ ${interactive_action} -eq 5 ]; then
-        installCronjob
+        if [ "${machine_id}" != "" ]; then
+            installCronjob
+        else
+            echo "! Machine ID is unknown."
+            echo "! Please register this machine first. (\"${SCRIPTNAME} -i\" and then choose [1])"
+            echo ""
+            exit 1
+        fi
     fi
 
     if [ ${interactive_action} -eq 6 ]; then

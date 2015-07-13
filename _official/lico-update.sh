@@ -361,6 +361,9 @@ getDistribution(){
                         /var/ipcop/general-functions.pl)
                             distribution=`${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1`
                             ;;
+                        /etc/depmod.d/ubuntu.conf)
+                            distribution="Ubuntu"
+                            ;;
                         /etc/debian_version)
                             distribution="Debian GNU/Linux"
                             ;;

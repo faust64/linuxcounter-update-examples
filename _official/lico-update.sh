@@ -158,6 +158,7 @@ SOCAT=$( getBin socat 2>/dev/null )
 SORT=$( getBin sort 2>/dev/null )
 SYSCTL=$( getBin sysctl 2>/dev/null )
 TAIL=$( getBin tail 2>/dev/null )
+TORSOCKS=$( getBin torsocks 2>/dev/null )
 UNAME=$( getBin uname 2>/dev/null )
 W=$( getBin w 2>/dev/null )
 WC=$( getBin wc 2>/dev/null )
@@ -301,6 +302,11 @@ if [ -z "${1}" ]; then
     echo " Usage:  ${SCRIPTNAME} [-i|-s|-m|-ci|-cu|-h|-v|-update]"
     echo " Use -h to get more help."
     exit 1
+fi
+
+if [ "${TORSOCKS}" != "" ]; then
+    echo "> torsocks available, will proxy curl commands"
+    CURL="$TORSOCKS $CURL"
 fi
 
 interactive=0

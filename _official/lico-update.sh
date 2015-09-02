@@ -458,7 +458,7 @@ getOs(){
 # host (FQDN hostname), for example, vivek (vivek.text.com)
 getHostName(){
     # try 'hostname -f'
-    myhostname=$(${HNAME} -f 2>/dev/null || echo "")
+    myhostname=$(${HOSTNAME} -f 2>/dev/null || echo "")
     if [ "${OS}" = "Linux" ]; then
         if [ "${HOSTNAME}" = "" ]; then
             if [ -e /etc/hostname ] ; then

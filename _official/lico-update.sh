@@ -748,7 +748,10 @@ sendDataToApi(){
     fi
     scanSystem
     . ${CONFFILE}
-    ${CURL} -s --request PATCH \
+    if [ "${httpproxy}" != "" ]; then
+        PROXY="--proxy ${httpproxy}"
+    fi
+    ${CURL} -s --request PATCH ${PROXY} \
         "${apiurl}/machines/${machine_id}" \
         --header "x-lico-machine-updatekey: ${machine_updatekey}" \
         --data "hostname=${hostname}" \

@@ -168,6 +168,7 @@ WHOAMI=$( getBin whoami 2>/dev/null )
 HOSTNAME=$( getBin hostname 2>/dev/null )
 PING=$( getBin ping 2>/dev/null )
 UPTIME=$( getBin uptime 2>/dev/null )
+GETENT=$( getBin getent 2>/dev/null )
 
 if [ "${HOME}" = "" ]; then
     if [ "${home}" = "" ]; then
@@ -520,7 +521,12 @@ getAccounts(){
         if [ "${UID_MAX}" = "" ]; then
             UID_MAX=10000
         fi
-        echo $(${CAT} ${PASSWD_FILE} 2>/dev/null | ${AWK} -F':' '{ if($3 >= '${UID_MIN}' && $3 <= '${UID_MAX}') print $0 }' | ${WC} -l)
+
+        if [[ "${GETENT}" != "" ]]; then
+            echo $(${GETENT} passwd 2>/dev/null | ${AWK} -F':' '{ if($3 >= '${UID_MIN}' && $3 <= '${UID_MAX}') print $0 }' | ${WC} -l)
+        else
+            echo $(${CAT} ${PASSWD_FILE} 2>/dev/null | ${AWK} -F':' '{ if($3 >= '${UID_MIN}' && $3 <= '${UID_MAX}') print $0 }' | ${WC} -l)
+        fi
     fi
 }
 

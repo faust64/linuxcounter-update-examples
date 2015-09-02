@@ -160,6 +160,7 @@ SYSCTL=$( getBin sysctl 2>/dev/null )
 TAIL=$( getBin tail 2>/dev/null )
 TORSOCKS=$( getBin torsocks 2>/dev/null )
 UNAME=$( getBin uname 2>/dev/null )
+UNIQ=$( getBin uniq 2>/dev/null )
 W=$( getBin w 2>/dev/null )
 WC=$( getBin wc 2>/dev/null )
 WGET=$( getBin wget 2>/dev/null )
@@ -589,9 +590,9 @@ getTotalDiskSpace() {
     if [ "${OS}" = "Linux" ]; then
         olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
         if [ "${olddf}" = "1" ]; then
-            space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+            space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 1-2 | ${SORT} | ${UNIQ} | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
         else
-            space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+            space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 1-2 | ${SORT} | ${UNIQ} | ${CUT} -d " " -f 2 | ${AWK} '{s+=$1} END {printf "%d", s}' )
         fi
         echo $(( ${space} / 1000 ))
     fi
@@ -601,9 +602,9 @@ getFreeDiskSpace() {
     if [ "${OS}" = "Linux" ]; then
         olddf=$( [ -z "$( ${DF} --help 2>&1 3>&1 4>&1 | ${GREP} -- "-l" )" ] && echo "1" || echo "0" )
         if [ "${olddf}" = "1" ]; then
-            space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+            space=$( ${DF} 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 1-4 | ${SORT} | ${UNIQ} | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
         else
-            space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
+            space=$( ${DF} -l -P 2>/dev/null | ${EGREP} "^/dev/" | ${SED} "s/  */\ /g" | ${CUT} -d " " -f 1-4 | ${SORT} | ${UNIQ} | ${CUT} -d " " -f 4 | ${AWK} '{s+=$1} END {printf "%d", s}' )
         fi
         echo $(( ${space} / 1000 ))
     fi

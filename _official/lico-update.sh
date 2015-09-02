@@ -18,7 +18,7 @@ apiurl="http://api.linuxcounter.net/v1"
 #==============================================================================
 
 export LANG=C
-export PATH="${HOME}/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+export PATH="${HOME}/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin:${PATH}"
 
 MYPATH=$(cd `dirname "${0}"` && pwd)/`basename "${0}"`
 

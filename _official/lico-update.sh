@@ -375,6 +375,9 @@ getDistribution(){
                         /etc/debian_version)
                             distribution="Debian GNU/Linux"
                             ;;
+                        /etc/devuan_version)
+                            distribution="Devuan GNU/Linux"
+                            ;;
                         /etc/GoboLinuxVersion)
                             distribution="GoboLinux"
                             ;;
@@ -421,6 +424,9 @@ getDistribVersion(){
                     release=$( ${GREP} 'version *=' ${releasefile} | ${HEAD} -n 1 )
                     ;;
                 /etc/debian_version)
+                    release=$( ${CAT} ${releasefile} )
+                    ;;
+                /etc/devuan_version)
                     release=$( ${CAT} ${releasefile} )
                     ;;
                 /etc/GoboLinuxVersion)
